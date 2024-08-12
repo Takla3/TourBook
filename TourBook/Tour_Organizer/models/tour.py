@@ -84,8 +84,10 @@ class Tour(BaseModel):
         max_digits=10, decimal_places=2, default=0.0)
     total_cost = models.DecimalField(max_digits=10, decimal_places=2)
 
-    x_starting_place = models.IntegerField(default=0)
-    y_starting_place = models.IntegerField(default=0)
+    x_starting_place = models.DecimalField(
+        max_digits=10, decimal_places=2, default=0.0)
+    y_starting_place = models.DecimalField(
+        max_digits=10, decimal_places=2, default=0.0)
 
     start_date = models.DateTimeField()
     end_date = models.DateTimeField()

@@ -92,10 +92,6 @@ class TourSerializer(serializers.ModelSerializer):
 
             if len(date_errors) > 0:
                 errors['date'] = date_errors
-        for field in self.get_char_fields():
-            if field in attrs:
-                if not bool(re.match(r'^[A-Za-z0-9\s]{4,}$', attrs.get(field))):
-                    errors[field] = f"Invalid {field}"
 
         for field in self.get_numeric_fields():
             if field in attrs:
