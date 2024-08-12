@@ -1,7 +1,6 @@
 from rest_framework.response import Response
 from rest_framework import status
 from django.core.exceptions import ValidationError
-from vaderSentiment.vaderSentiment import SentimentIntensityAnalyzer
 
 from rest_framework.decorators import action
 
@@ -14,13 +13,14 @@ from djoser.views import UserViewSet
 
 from Core.permissions.OrganizerPermissions import IsOrganizerOwnerProfile
 
-from ..models.tour_organizer import TourOrganizer
 
 from django.core import exceptions
 
-from collections import defaultdict
 
 from drf_spectacular.utils import extend_schema_view, extend_schema
+
+from ..services.SentimentAnalysis import get_organizer_tours_rating
+from ..services.OrganizerStatistics import OrganizerStatistics
 
 
 @extend_schema_view(
@@ -193,44 +193,16 @@ class TourOrganizerView(UserViewSet):
                        tags=["Organizer Statistics"]),
 
 )
-class OrganizerStatistics(ModelViewSet):
+class OrganizerStatisticsView(ModelViewSet):
     def list(self, request):
-        # don't forget to apply SRP
+        # Applying SRP by separating concerns into smaller methods
         try:
-
             organizer = request.user.organizer
             tours = organizer.organizer_tours.filter(posted=1).all()
 
-            months = ["January", "February", "March", "April", "May", "June",
-                      "July", "August", "September", "October", "November", "December"]
-            tours_per_month = {
-                month: 0 for month in months
-            }
-            profits_per_month = {
-                month: 0 for month in months
-            }
-
-            result = []
-            total_profit = sum(tour.seat_num*tour.seat_cost for tour in tours)
-            for tour in tours:
-                tours_per_month[tour.start_date.strftime("%B")] += 1
-                profits_per_month[tour.start_date.strftime(
-                    "%B")] += tour.seat_num * tour.seat_cost
-
-            for month, count in tours_per_month.items():
-                profits_per_month[month] = round(profits_per_month[month] /
-                                                 total_profit * 100, 2)
-                data = {"month": month, "count": count,
-                        "profits_per_month": f"{profits_per_month[month]}%"}
-                result.append(data)
-
-            comments = []
-
-            for tour in tours:
-                for comment in tour.tour_comments.all():
-                    comments.append(comment)
-
-            organizer_tours_rating = get_sentiment_scores(comments)
+            organizer_statistics = OrganizerStatistics()
+            result = organizer_statistics.get_tour_statistics(tours)
+            organizer_tours_rating = get_organizer_tours_rating(tours)
 
             data = {
                 "tour_per_months": result,
@@ -256,74 +228,3 @@ class OrganizerStatistics(ModelViewSet):
             },
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR
             )
-
-    def get_organizer_tour_profits_per_month(self, tour_organizer):
-        """
-        Calculates the profits for an organizer's tours per month.
-
-        Args:
-            tour_organizer (TourOrganizer): The tour organizer object.
-
-        Returns:
-            dict: A dictionary where the keys are the month-year strings and the values are the profits for that month.
-        """
-        profits_per_month = defaultdict(int)
-
-        tours = tour_organizer.organizer_tours.filter(posted=1)
-        tour_profits = 0
-
-        for tour in tours:
-            month_name = tour.start_date.strftime('%d')
-
-            tour_profit += tour.seat_num * tour.seat_cost
-
-            profits_per_month[month_name] += tour_profits
-
-        return profits_per_month
-
-
-def get_sentiment_scores(comments):
-    """
-    Calculates sentiment scores for a list of comments using the SentimentIntensityAnalyzer.
-
-    Args:
-        comments (list): A list of Comment objects or strings representing comments.
-
-    Returns:
-        list: A list of compound sentiment scores for each comment.
-    """
-    analyzer = SentimentIntensityAnalyzer()
-    scores = []
-    result = 0
-    if len(comments) > 0:
-        for comment in comments:
-            sentiment_scores = analyzer.polarity_scores(comment.comment)
-            compound_score = sentiment_scores['compound']
-            scores.append(compound_score)
-        result = convert_to_percentage_value(scores)
-    else:
-        result = 0
-
-    return f"{round(result, 2)}%"
-
-
-def convert_to_percentage_value(values):
-    """
-    Converts a list of values from the range [-1, 1] to the range [0, 5].
-    the range in we have in [-1,1] so we add 1 to make it in [0 ,2] then we multipal it with 2.5
-    to make it [0,5] to apply 5 star system
-    then we converte the last result to percentage value
-
-    Args:
-        values (list): A list of numeric values representing ratings within the range [-1, 1].
-
-    Returns:
-        float: The average rating in percentage.
-    """
-    total = 0
-    for value in values:
-        rating = round((value + 1) * 2.5, 1)
-        total += rating
-    average_rating = round(total / len(values), 1)
-    average_rating = average_rating * 100 / 5
-    return average_rating
