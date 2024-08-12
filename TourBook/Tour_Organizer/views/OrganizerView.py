@@ -19,7 +19,6 @@ from django.core import exceptions
 
 from drf_spectacular.utils import extend_schema_view, extend_schema
 
-from ..services.SentimentAnalysis import get_organizer_tours_rating
 from ..services.OrganizerStatistics import OrganizerStatistics
 
 
@@ -202,11 +201,11 @@ class OrganizerStatisticsView(ModelViewSet):
 
             organizer_statistics = OrganizerStatistics()
             result = organizer_statistics.get_tour_statistics(tours)
-            organizer_tours_rating = get_organizer_tours_rating(tours)
+            # organizer_tours_rating = get_organizer_tours_rating(tours)
 
             data = {
                 "tour_per_months": result,
-                "organizer_tours_rating": organizer_tours_rating
+                # "organizer_tours_rating": organizer_tours_rating
             }
 
             return Response({"data": data}, status=status.HTTP_200_OK)
