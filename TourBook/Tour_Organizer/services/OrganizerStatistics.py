@@ -101,7 +101,7 @@ class OrganizerStatistics:
             data = {
                 "month": month,
                 "count": tours_per_month[month],
-                "profits_per_month": f"{profits_percentage[month]}%"
+                "profits_per_month": profits_percentage[month]
             }
             result.append(data)
 
