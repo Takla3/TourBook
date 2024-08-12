@@ -24,8 +24,10 @@ class TourPoint(BaseModel):
     description = models.TextField(max_length=1000, blank=True, null=True)
     arrival_time = models.DateTimeField()
     leaving_time = models.DateTimeField()
-    axis_x = models.IntegerField(default=0)
-    axis_y = models.IntegerField(default=0)
+    axis_x = models.DecimalField(
+        max_digits=10, decimal_places=2, default=0.0)
+    axis_y = models.DecimalField(
+        max_digits=10, decimal_places=2, default=0.0)
     tour_object = models.ForeignKey(
         Tour, on_delete=models.CASCADE, related_name="tour_points")
     offer_request = models.OneToOneField(

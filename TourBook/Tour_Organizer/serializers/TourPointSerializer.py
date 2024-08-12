@@ -88,11 +88,6 @@ class TourPointSerializer(serializers.ModelSerializer):
                     if attrs[field] < 0:
                         errors[field] = f"{field} Should NOT be Negative"
 
-        for field in self.get_char_fields():
-            if field in attrs:
-                if not bool(re.match(r'^[A-Za-z0-9\s]{4,}$', attrs[field])):
-                    errors[field] = f"Invalid {field}"
-
         if len(errors) > 0:
             raise serializers.ValidationError(errors)
         return attrs
