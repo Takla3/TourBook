@@ -1,5 +1,5 @@
 from django.urls import path, include
-from .views.OrganizerView import TourOrganizerView, OrganizerStatistics
+from .views.OrganizerView import TourOrganizerView, OrganizerStatisticsView
 from .views.TourView import TourView, UnauthToursView, OrganizerTours, OtherOrganizersTours, TourRequests, TourPosted
 
 from .views.TourPointView import TourPointView
@@ -18,7 +18,7 @@ organizer_patterns = [
         name='organizers'
     ),
     path(
-        'statistics', OrganizerStatistics.as_view(
+        'statistics', OrganizerStatisticsView.as_view(
             {
                 'get': 'list',
             }
